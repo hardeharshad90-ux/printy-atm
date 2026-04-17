@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print ATM</title>
+    <style>
+        /* This is the CSS - It makes the app look like a mobile screen */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #e9ecef; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+        }
+        .app-container { 
+            background: white; 
+            width: 100%; 
+            max-width: 380px; /* Mobile phone width */
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+        h2 { text-align: center; color: #2c3e50; font-weight: 800; margin-bottom: 30px;}
+        .upload-box { 
+            border: 2px dashed #27ae60; 
+            background-color: #f9fbf9;
+            padding: 40px 20px; 
+            text-align: center; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            margin-bottom: 25px; 
+            transition: 0.3s;
+        }
+        .upload-box:hover { background-color: #eafaf1; }
+        .settings { margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 10px;}
+        .setting-item { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center;}
+        .setting-item:last-child { margin-bottom: 0; }
+        select, input[type="number"] { padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;}
+        .pay-btn { 
+            width: 100%; 
+            padding: 16px; 
+            background-color: #27ae60; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: bold;
+            cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+        }
+        .pay-btn:hover { background-color: #219653; }
+        #otp-display { display: none; text-align: center; margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px;}
+        .otp-code { font-size: 40px; font-weight: 900; letter-spacing: 8px; color: #27ae60; margin: 10px 0;}
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h2>🖨️ Print ATM</h2>
+
+        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+            <h3 style="margin: 0; color: #27ae60;">+ Tap to Upload PDF</h3>
+            <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="updateFileName()">
+            <p id="fileName" style="margin-top: 10px; color: #7f8c8d; font-size: 14px;">No file selected</p>
+        </div>
+
+        <div class="settings">
+            <div class="setting-item">
+                <label><strong>Number of Copies:</strong></label>
+                <input type="number" id="copies" value="1" min="1" style="width: 60px;">
+            </div>
+            <div class="setting-item">
+                <label><strong>Color Mode:</strong></label>
+                <select id="colorMode">
+                    <option value="bw">Black & White (₹2)</option>
+                    <option value="color">Color (₹10)</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="pay-btn" onclick="processOrder()">Proceed to Pay</button>
+
+        <div id="otp-display">
+            <p style="color: #7f8c8d; font-weight: bold;">Your Print Code is Ready!</p>
+            <div class="otp-code" id="otp-text">0000</div>
+            <p><small>Enter this on the machine keypad.</small></p>
+        </div>
+    </div>
+
+    <script>
+        // This is the JavaScript - It controls the logic
+        
+        function updateFileName() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('fileName');
+            
+            if(fileInput.files.length > 0) {
+                // Change the text to the actual name of the uploaded PDF
+                fileNameDisplay.innerText = "📄 " + fileInput.files[0].name;
+                fileNameDisplay.style.color = "#27ae60";
+                fileNameDisplay.style.fontWeight = "bold";
+            }
+        }
+
+        function processOrder() {
+            const fileInput = document.getElementById('fileInput');
+            
+            // Check if user actually uploaded something
+            if(fileInput.files.length === 0) {
+                alert("Please upload a document before proceeding!");
+                return;
+            }
+
+            // Generate a random 4 digit number between 1000 and 9999
+            const randomOTP = Math.floor(1000 + Math.random() * 9000);
+            
+            // Make the hidden OTP section visible and inject the random number
+            document.getElementById('otp-display').style.display = 'block';
+            document.getElementById('otp-text').innerText = randomOTP;
+            
+            // Change button text to simulate order completion
+            const btn = document.querySelector('.pay-btn');
+            btn.innerText = "Payment Successful ✅";
+            btn.style.backgroundColor = "#2c3e50";
+        }
+    </script>
+
+</body>
+</html>
