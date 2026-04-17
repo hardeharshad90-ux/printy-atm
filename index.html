@@ -3,83 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print ATM</title>
+    <title>Print ATM (Live)</title>
     <style>
-        /* This is the CSS - It makes the app look like a mobile screen */
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #e9ecef; 
-            display: flex; 
-            justify-content: center; 
-            padding: 20px; 
-        }
-        .app-container { 
-            background: white; 
-            width: 100%; 
-            max-width: 380px; /* Mobile phone width */
-            border-radius: 20px; 
-            padding: 25px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-        }
-        h2 { text-align: center; color: #2c3e50; font-weight: 800; margin-bottom: 30px;}
-        .upload-box { 
-            border: 2px dashed #27ae60; 
-            background-color: #f9fbf9;
-            padding: 40px 20px; 
-            text-align: center; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            margin-bottom: 25px; 
-            transition: 0.3s;
-        }
+        body { font-family: -apple-system, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        .app-container { background: white; width: 100%; max-width: 380px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; font-weight: 800; }
+        .upload-box { border: 2px dashed #27ae60; background-color: #f9fbf9; padding: 40px 20px; text-align: center; border-radius: 12px; cursor: pointer; margin-bottom: 25px; transition: 0.3s;}
         .upload-box:hover { background-color: #eafaf1; }
         .settings { margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 10px;}
         .setting-item { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center;}
-        .setting-item:last-child { margin-bottom: 0; }
-        select, input[type="number"] { padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;}
-        .pay-btn { 
-            width: 100%; 
-            padding: 16px; 
-            background-color: #27ae60; 
-            color: white; 
-            border: none; 
-            border-radius: 10px; 
-            font-size: 16px; 
-            font-weight: bold;
-            cursor: pointer; 
-            box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
-        }
-        .pay-btn:hover { background-color: #219653; }
+        select, input[type="number"] { padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+        .pay-btn { width: 100%; padding: 16px; background-color: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px;}
         #otp-display { display: none; text-align: center; margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px;}
         .otp-code { font-size: 40px; font-weight: 900; letter-spacing: 8px; color: #27ae60; margin: 10px 0;}
+        
+        /* Payment Screen Styles */
+        #payment-screen { display: none; text-align: center; }
+        #qrcode { display: flex; justify-content: center; margin: 20px 0; padding: 10px; background: white; border-radius: 10px; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
     <div class="app-container">
-        <h2>🖨️ Print ATM</h2>
+        <h2>🖨️ Print ATM (Live)</h2>
+        
+        <div id="order-screen">
+            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                <h3 style="color: #27ae60;">+ Tap to Upload PDF</h3>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="updateFileName()">
+                <p id="fileName" style="color: #7f8c8d; font-size: 14px;">No file selected</p>
+            </div>
 
-        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-            <h3 style="margin: 0; color: #27ae60;">+ Tap to Upload PDF</h3>
-            <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="updateFileName()">
-            <p id="fileName" style="margin-top: 10px; color: #7f8c8d; font-size: 14px;">No file selected</p>
+            <div class="settings">
+                <div class="setting-item">
+                    <label><strong>Copies:</strong></label>
+                    <input type="number" id="copies" value="1" min="1" style="width: 60px;">
+                </div>
+                <div class="setting-item">
+                    <label><strong>Color Mode:</strong></label>
+                    <select id="colorMode">
+                        <option value="bw">Black & White (₹2)</option>
+                        <option value="color">Color (₹10)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="pay-btn" onclick="showPaymentScreen()">Proceed to Pay</button>
         </div>
 
-        <div class="settings">
-            <div class="setting-item">
-                <label><strong>Number of Copies:</strong></label>
-                <input type="number" id="copies" value="1" min="1" style="width: 60px;">
-            </div>
-            <div class="setting-item">
-                <label><strong>Color Mode:</strong></label>
-                <select id="colorMode">
-                    <option value="bw">Black & White (₹2)</option>
-                    <option value="color">Color (₹10)</option>
-                </select>
-            </div>
+        <div id="payment-screen">
+            <h3 style="color: #2c3e50;">Total: ₹<span id="amount-text"></span></h3>
+            <p style="color: #7f8c8d; font-size: 14px;">Scan to pay via GPay, PhonePe, or Paytm</p>
+            
+            <div id="qrcode"></div>
+            
+            <button class="pay-btn" id="confirm-btn" onclick="processOrder()">I Have Paid ✅</button>
+            <button class="pay-btn" style="background-color: #e74c3c; margin-top: 10px;" onclick="cancelOrder()">Cancel</button>
         </div>
-
-        <button class="pay-btn" onclick="processOrder()">Proceed to Pay</button>
 
         <div id="otp-display">
             <p style="color: #7f8c8d; font-weight: bold;">Your Print Code is Ready!</p>
@@ -88,43 +69,99 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
-        // This is the JavaScript - It controls the logic
-        
+        const SUPABASE_URL = "https://lsbzoqaircvvtptvlixu.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_xjUIuHFS65Ff_EBuKt3Obw_SXTdylKH";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Your Exact UPI ID
+        const MY_UPI_ID = "harshadharde11@ibl";
+
         function updateFileName() {
             const fileInput = document.getElementById('fileInput');
             const fileNameDisplay = document.getElementById('fileName');
-            
             if(fileInput.files.length > 0) {
-                // Change the text to the actual name of the uploaded PDF
                 fileNameDisplay.innerText = "📄 " + fileInput.files[0].name;
                 fileNameDisplay.style.color = "#27ae60";
                 fileNameDisplay.style.fontWeight = "bold";
             }
         }
 
-        function processOrder() {
+        function showPaymentScreen() {
             const fileInput = document.getElementById('fileInput');
-            
-            // Check if user actually uploaded something
             if(fileInput.files.length === 0) {
-                alert("Please upload a document before proceeding!");
+                alert("Please upload a PDF first!");
                 return;
             }
 
-            // Generate a random 4 digit number between 1000 and 9999
-            const randomOTP = Math.floor(1000 + Math.random() * 9000);
+            const copies = parseInt(document.getElementById('copies').value);
+            const colorMode = document.getElementById('colorMode').value;
+            const pricePerPage = colorMode === 'color' ? 10 : 2;
+            const totalAmount = copies * pricePerPage;
+
+            document.getElementById('amount-text').innerText = totalAmount;
+
+            const upiString = `upi://pay?pa=${MY_UPI_ID}&pn=Print%20ATM&am=${totalAmount}&cu=INR`;
+            document.getElementById('qrcode').innerHTML = ""; 
+            new QRCode(document.getElementById("qrcode"), {
+                text: upiString,
+                width: 150,
+                height: 150
+            });
+
+            document.getElementById('order-screen').style.display = 'none';
+            document.getElementById('payment-screen').style.display = 'block';
+        }
+
+        function cancelOrder() {
+            document.getElementById('order-screen').style.display = 'block';
+            document.getElementById('payment-screen').style.display = 'none';
+        }
+
+        async function processOrder() {
+            const fileInput = document.getElementById('fileInput');
+            const copies = document.getElementById('copies').value;
+            const colorMode = document.getElementById('colorMode').value;
+            const btn = document.getElementById('confirm-btn');
+
+            const file = fileInput.files[0];
+            const randomOTP = Math.floor(1000 + Math.random() * 9000).toString();
             
-            // Make the hidden OTP section visible and inject the random number
-            document.getElementById('otp-display').style.display = 'block';
-            document.getElementById('otp-text').innerText = randomOTP;
-            
-            // Change button text to simulate order completion
-            const btn = document.querySelector('.pay-btn');
-            btn.innerText = "Payment Successful ✅";
-            btn.style.backgroundColor = "#2c3e50";
+            btn.innerText = "Uploading File... 🚀";
+            btn.disabled = true;
+
+            try {
+                // 1. Upload file
+                const filePath = `uploads/${randomOTP}_${file.name}`;
+                const { error: uploadError } = await supabaseClient.storage.from('kiosk-prints').upload(filePath, file);
+                if (uploadError) throw uploadError;
+
+                // 2. Get link
+                const { data: urlData } = supabaseClient.storage.from('kiosk-prints').getPublicUrl(filePath);
+
+                // 3. Save to database
+                const { error: dbError } = await supabaseClient.from('print_jobs').insert([{ 
+                    otp: randomOTP, 
+                    file_url: urlData.publicUrl, 
+                    copies: copies, 
+                    color_mode: colorMode 
+                }]);
+                if (dbError) throw dbError;
+
+                // 4. Success UI
+                document.getElementById('payment-screen').style.display = 'none';
+                document.getElementById('otp-display').style.display = 'block';
+                document.getElementById('otp-text').innerText = randomOTP;
+
+            } catch (err) {
+                console.error(err);
+                alert("Error saving file. Please try again.");
+                btn.disabled = false;
+                btn.innerText = "I Have Paid ✅";
+            }
         }
     </script>
-
 </body>
 </html>
